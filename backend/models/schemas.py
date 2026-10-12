@@ -16,6 +16,14 @@ class LocationInfo(BaseModel):
     lon: float
 
 
+class DataQualityMetrics(BaseModel):
+    total_days: int = Field(..., description="Total days in sequence")
+    missing_days_filled: int = Field(..., description="Count of missing days interpolated/filled")
+    temp_outliers_fixed: int = Field(..., description="Count of temperature outliers corrected")
+    precip_outliers_fixed: int = Field(..., description="Count of precipitation outliers clamped")
+    completeness_pct: float = Field(..., description="Percentage of original valid daily records")
+
+
 class AnalyzeResponse(BaseModel):
     """
     Response schema for the /api/analyze endpoint.
@@ -31,6 +39,7 @@ class AnalyzeResponse(BaseModel):
     rolling_avg: Dict[str, float] = Field(..., description="5-year rolling average of annual events")
     insights: List[str] = Field(..., description="Programmatic insights and trend conclusions")
     cached: bool = Field(default=False, description="Whether data was served from MongoDB cache")
+    data_quality: Optional[DataQualityMetrics] = Field(default=None, description="Data quality metrics")
 
 
 class AISummaryRequest(BaseModel):

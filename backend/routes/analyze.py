@@ -1,8 +1,8 @@
 from typing import Literal
 from fastapi import APIRouter, HTTPException, Query
 
-from models.schemas import AnalyzeResponse, LocationInfo
-from services import heatwave, rainfall, trends, weather
+from models.schemas import AnalyzeResponse, DataQualityMetrics, LocationInfo
+from services import data_quality, heatwave, rainfall, trends, weather
 
 router = APIRouter(tags=["Analysis"])
 
@@ -48,9 +48,10 @@ async def analyze_hazard(
     Pipeline:
     1. Validates coordinate bounds and year ranges (start_year < end_year).
     2. Retrieves historical weather data via MongoDB cache (falling back to Open-Meteo Archive API).
-    3. Runs hazard event detection (Heatwave 95th percentile runs OR Heavy Rainfall wet-day R95p / downpours).
-    4. Computes annual hazard counts, 5-year rolling averages, and programmatic trend insights.
-    5. Returns structured JSON ready for frontend charts and insight cards.
+    3. Runs data quality hygiene (fills missing days, clamps/filters physical outliers).
+    4. Runs hazard event detection (Heatwave 95th percentile runs OR Heavy Rainfall wet-day R95p / downpours).
+    5. Computes annual hazard counts, 5-year rolling averages, and programmatic trend insights.
+    6. Returns structured JSON ready for frontend charts, insight cards, and quality metrics.
     """
     if start_year >= end_year:
         raise HTTPException(
@@ -61,28 +62,35 @@ async def analyze_hazard(
     # 1. Fetch weather data (checks MongoDB cache first)
     weather_data = await weather.get_weather_data(lat, lon, start_year, end_year)
     daily = weather_data.get("daily", {})
-    dates = daily.get("time", [])
+    raw_dates = daily.get("time", [])
+    raw_tmax = daily.get("temperature_2m_max", [])
+    raw_precip = daily.get("precipitation_sum", [])
 
-    if not dates:
+    if not raw_dates:
         raise HTTPException(
             status_code=502,
             detail="No daily historical weather observations were returned for the requested coordinate and period.",
         )
 
-    # 2. Detect hazard events based on requested hazard type
+    # 2. Data quality handling: fill sequence gaps and filter physical outliers
+    cleaned = data_quality.clean_weather_data(raw_dates, raw_tmax, raw_precip)
+    dates = cleaned["dates"]
+    tmax = cleaned["tmax"]
+    precip = cleaned["precip"]
+    quality_metrics = cleaned["metrics"]
+
+    # 3. Detect hazard events based on requested hazard type
     normalized_hazard = "rainfall" if "rain" in hazard.lower() else "heatwave"
 
     if normalized_hazard == "heatwave":
-        tmax = daily.get("temperature_2m_max", [])
         detection_result = heatwave.detect_heatwaves(dates, tmax)
     else:
-        precip = daily.get("precipitation_sum", [])
         detection_result = rainfall.detect_heavy_rainfall(dates, precip)
 
     events = detection_result.get("events", [])
     threshold = detection_result.get("threshold", 0.0)
 
-    # 3. Analyze trends (yearly counts, 5-year rolling average, insight strings)
+    # 4. Analyze trends (yearly counts, 5-year rolling average, insight strings)
     trend_results = trends.analyze_trends(
         events=events,
         start_year=start_year,
@@ -102,4 +110,5 @@ async def analyze_hazard(
         rolling_avg=trend_results["rolling_avg"],
         insights=trend_results["insights"],
         cached=weather_data.get("cached", False),
+        data_quality=DataQualityMetrics(**quality_metrics),
     )
