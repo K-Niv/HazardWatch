@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
-from routes import health
+from routes import ai_summary, health
 from services import weather
 
 app = FastAPI(
@@ -23,6 +23,7 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(health.router, prefix="/api")
+app.include_router(ai_summary.router, prefix="/api")
 
 
 @app.get("/")
