@@ -1,7 +1,12 @@
 from typing import Literal
 from fastapi import APIRouter, HTTPException, Query
 
-from models.schemas import AnalyzeResponse, DataQualityMetrics, LocationInfo
+from models.schemas import (
+    AnalyzeResponse,
+    DataQualityMetrics,
+    HazardDetail,
+    LocationInfo,
+)
 from services import data_quality, heatwave, rainfall, trends, weather
 
 router = APIRouter(tags=["Analysis"])
@@ -79,36 +84,68 @@ async def analyze_hazard(
     precip = cleaned["precip"]
     quality_metrics = cleaned["metrics"]
 
-    # 3. Detect hazard events based on requested hazard type
-    normalized_hazard = "rainfall" if "rain" in hazard.lower() else "heatwave"
-
-    if normalized_hazard == "heatwave":
-        detection_result = heatwave.detect_heatwaves(dates, tmax)
-    else:
-        detection_result = rainfall.detect_heavy_rainfall(dates, precip)
-
-    events = detection_result.get("events", [])
-    threshold = detection_result.get("threshold", 0.0)
-
-    # 4. Analyze trends (yearly counts, 5-year rolling average, insight strings)
-    trend_results = trends.analyze_trends(
-        events=events,
+    # 3. Detect both Heatwave and Heavy Rainfall hazards in parallel
+    # A. Heatwaves
+    hw_detection = heatwave.detect_heatwaves(dates, tmax)
+    hw_events = hw_detection.get("events", [])
+    hw_threshold = hw_detection.get("threshold", 0.0)
+    hw_trends = trends.analyze_trends(
+        events=hw_events,
         start_year=start_year,
         end_year=end_year,
-        hazard_type=normalized_hazard,
+        hazard_type="heatwave",
     )
+    hw_detail = HazardDetail(
+        hazard_type="heatwave",
+        threshold=hw_threshold,
+        total_events=len(hw_events),
+        events=hw_events,
+        yearly_counts=hw_trends["yearly_counts"],
+        rolling_avg=hw_trends["rolling_avg"],
+        insights=hw_trends["insights"],
+    )
+
+    # B. Heavy Rainfall
+    rf_detection = rainfall.detect_heavy_rainfall(dates, precip)
+    rf_events = rf_detection.get("events", [])
+    rf_threshold = rf_detection.get("threshold", 0.0)
+    rf_trends = trends.analyze_trends(
+        events=rf_events,
+        start_year=start_year,
+        end_year=end_year,
+        hazard_type="rainfall",
+    )
+    rf_detail = HazardDetail(
+        hazard_type="rainfall",
+        threshold=rf_threshold,
+        total_events=len(rf_events),
+        events=rf_events,
+        yearly_counts=rf_trends["yearly_counts"],
+        rolling_avg=rf_trends["rolling_avg"],
+        insights=rf_trends["insights"],
+    )
+
+    hazards_dict = {
+        "heatwave": hw_detail,
+        "rainfall": rf_detail,
+    }
+
+    # Selected active hazard (for backward compatibility)
+    normalized_hazard = "rainfall" if "rain" in hazard.lower() else "heatwave"
+    active_detail = hazards_dict[normalized_hazard]
 
     return AnalyzeResponse(
         hazard_type=normalized_hazard,
         location=LocationInfo(lat=lat, lon=lon),
         start_year=start_year,
         end_year=end_year,
-        threshold=threshold,
-        total_events=len(events),
-        events=events,
-        yearly_counts=trend_results["yearly_counts"],
-        rolling_avg=trend_results["rolling_avg"],
-        insights=trend_results["insights"],
+        threshold=active_detail.threshold,
+        total_events=active_detail.total_events,
+        events=active_detail.events,
+        yearly_counts=active_detail.yearly_counts,
+        rolling_avg=active_detail.rolling_avg,
+        insights=active_detail.insights,
         cached=weather_data.get("cached", False),
         data_quality=DataQualityMetrics(**quality_metrics),
+        hazards=hazards_dict,
     )

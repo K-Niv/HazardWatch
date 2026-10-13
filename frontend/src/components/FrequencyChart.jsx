@@ -90,46 +90,52 @@ export default function FrequencyChart({
 
   // Chart.js Dataset payload
   const chartData = useMemo(() => {
+    const datasets = [
+      {
+        type: 'bar',
+        label: isHeatwave ? 'Annual Heatwaves' : 'Annual Rainfall Events',
+        data: barValues,
+        backgroundColor: isHeatwave
+          ? 'rgba(234, 88, 12, 0.65)' // orange-600
+          : 'rgba(6, 182, 212, 0.65)', // cyan-500
+        hoverBackgroundColor: isHeatwave
+          ? 'rgba(249, 115, 22, 0.95)'
+          : 'rgba(34, 211, 238, 0.95)',
+        borderColor: isHeatwave
+          ? 'rgba(251, 146, 60, 0.9)'
+          : 'rgba(34, 211, 238, 0.9)',
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+        order: 2,
+      },
+    ]
+
+    // Only render 5-year rolling average line if timeline has at least 5 years
+    if (labels.length >= 5 && lineValues.length > 0) {
+      datasets.unshift({
+        type: 'line',
+        label: '5-Year Rolling Average',
+        data: lineValues,
+        borderColor: isHeatwave ? '#f59e0b' : '#38bdf8', // amber-500 : sky-400
+        backgroundColor: isHeatwave
+          ? 'rgba(245, 158, 11, 0.12)'
+          : 'rgba(56, 189, 248, 0.12)',
+        borderWidth: 2.5,
+        tension: 0.35,
+        fill: true,
+        pointRadius: labels.length > 45 ? 0 : 3,
+        pointHoverRadius: 6,
+        pointBackgroundColor: isHeatwave ? '#fbbf24' : '#38bdf8',
+        pointBorderColor: '#090d16',
+        pointBorderWidth: 2,
+        order: 1,
+      })
+    }
+
     return {
       labels,
-      datasets: [
-        {
-          type: 'line',
-          label: '5-Year Rolling Average',
-          data: lineValues,
-          borderColor: isHeatwave ? '#f59e0b' : '#38bdf8', // amber-500 : sky-400
-          backgroundColor: isHeatwave
-            ? 'rgba(245, 158, 11, 0.12)'
-            : 'rgba(56, 189, 248, 0.12)',
-          borderWidth: 2.5,
-          tension: 0.35,
-          fill: true,
-          pointRadius: labels.length > 45 ? 0 : 3,
-          pointHoverRadius: 6,
-          pointBackgroundColor: isHeatwave ? '#fbbf24' : '#38bdf8',
-          pointBorderColor: '#090d16',
-          pointBorderWidth: 2,
-          order: 1,
-        },
-        {
-          type: 'bar',
-          label: isHeatwave ? 'Annual Heatwaves' : 'Annual Rainfall Events',
-          data: barValues,
-          backgroundColor: isHeatwave
-            ? 'rgba(234, 88, 12, 0.65)' // orange-600
-            : 'rgba(6, 182, 212, 0.65)', // cyan-500
-          hoverBackgroundColor: isHeatwave
-            ? 'rgba(249, 115, 22, 0.95)'
-            : 'rgba(34, 211, 238, 0.95)',
-          borderColor: isHeatwave
-            ? 'rgba(251, 146, 60, 0.9)'
-            : 'rgba(34, 211, 238, 0.9)',
-          borderWidth: 1,
-          borderRadius: 4,
-          borderSkipped: false,
-          order: 2,
-        },
-      ],
+      datasets,
     }
   }, [labels, barValues, lineValues, isHeatwave])
 
@@ -313,6 +319,11 @@ export default function FrequencyChart({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {labels.length < 5 && (
+            <Badge variant="outline" className="text-[10px] font-mono border-muted-foreground/30 text-muted-foreground bg-muted/20">
+              5-Yr Trendline Omitted (Span &lt; 5 yrs)
+            </Badge>
+          )}
           {peakYear && (
             <Badge variant="outline" className="text-[11px] font-mono border-amber-500/30 text-amber-300 bg-amber-500/10">
               <Zap className="w-3 h-3 mr-1 text-amber-400" />

@@ -41,9 +41,13 @@ def calculate_rolling_average(
 ) -> Dict[str, float]:
     """
     Compute a backward-looking rolling average over window_size years.
-    For the first few years, averages across available years.
+    If the total observation timeline has fewer years than window_size (e.g. < 5 years),
+    returns an empty dict since a 5-year rolling window is undefined for shorter spans.
     """
     years = sorted(yearly_counts.keys(), key=int)
+    if len(years) < window_size:
+        return {}
+
     counts = [yearly_counts[y] for y in years]
     rolling_avg: Dict[str, float] = {}
 

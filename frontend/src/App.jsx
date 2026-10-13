@@ -57,6 +57,15 @@ export default function App() {
     autoFetchOnMount: true,
   })
 
+  // Derive active hazard data from dual-hazard response
+  const activeHazardData = useMemo(() => {
+    if (!data) return null
+    if (data.hazards && data.hazards[selectedHazard]) {
+      return data.hazards[selectedHazard]
+    }
+    return data
+  }, [data, selectedHazard])
+
   // Check if staged user parameters differ from currently analyzed dataset
   const hasPendingChanges = useMemo(() => {
     if (!lastAnalyzedParams) return false
@@ -65,7 +74,11 @@ export default function App() {
     const yearDiff =
       lastAnalyzedParams.startYear !== yearRange.start ||
       lastAnalyzedParams.endYear !== yearRange.end
-    const hazardDiff = lastAnalyzedParams.hazard !== selectedHazard
+
+    // If dual hazard payload is present, switching hazard tabs is instant and doesn't need re-query
+    const hasBothHazards = Boolean(data?.hazards && data.hazards[selectedHazard])
+    const hazardDiff = !hasBothHazards && lastAnalyzedParams.hazard !== selectedHazard
+
     return latDiff || lonDiff || yearDiff || hazardDiff
   }, [
     lastAnalyzedParams,
@@ -74,6 +87,7 @@ export default function App() {
     yearRange.start,
     yearRange.end,
     selectedHazard,
+    data,
   ])
 
   // Handle Hazard Mode Toggle
@@ -92,19 +106,19 @@ export default function App() {
     })
   }
 
-  // Compute Peak Activity Year from live dataset
+  // Compute Peak Activity Year from active hazard dataset
   const peakYearInfo = useMemo(() => {
-    if (!data?.yearly_counts) return { year: '—', count: 0 }
+    if (!activeHazardData?.yearly_counts) return { year: '—', count: 0 }
     let maxYear = '—'
     let maxCount = 0
-    for (const [y, cnt] of Object.entries(data.yearly_counts)) {
+    for (const [y, cnt] of Object.entries(activeHazardData.yearly_counts)) {
       if (cnt > maxCount) {
         maxCount = cnt
         maxYear = y
       }
     }
     return { year: maxYear, count: maxCount }
-  }, [data])
+  }, [activeHazardData])
 
   return (
     <TooltipProvider>
@@ -382,7 +396,7 @@ export default function App() {
                       {loading ? (
                         <span className="inline-block w-8 h-6 bg-muted/60 animate-pulse rounded" />
                       ) : (
-                        data?.total_events ?? '—'
+                        activeHazardData?.total_events ?? '—'
                       )}
                     </CardTitle>
                   </CardHeader>
@@ -402,8 +416,8 @@ export default function App() {
                     <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
                       {loading ? (
                         <span className="inline-block w-14 h-6 bg-muted/60 animate-pulse rounded" />
-                      ) : data?.threshold != null ? (
-                        isHeatwave ? `${data.threshold}°C` : `${data.threshold} mm`
+                      ) : activeHazardData?.threshold != null ? (
+                        isHeatwave ? `${activeHazardData.threshold}°C` : `${activeHazardData.threshold} mm`
                       ) : (
                         '—'
                       )}
@@ -479,7 +493,7 @@ export default function App() {
                 </CardHeader>
                 <CardContent className="pt-2">
                   <FrequencyChart
-                    data={data}
+                    data={activeHazardData}
                     hazardType={selectedHazard}
                     loading={loading}
                   />
@@ -511,8 +525,8 @@ export default function App() {
                         <div className="h-10 rounded-lg bg-muted/30 animate-pulse" />
                         <div className="h-10 rounded-lg bg-muted/30 animate-pulse" />
                       </div>
-                    ) : data?.insights && data.insights.length > 0 ? (
-                      data.insights.map((insight, idx) => (
+                    ) : activeHazardData?.insights && activeHazardData.insights.length > 0 ? (
+                      activeHazardData.insights.map((insight, idx) => (
                         <div
                           key={idx}
                           className="p-3 rounded-lg border border-border/40 bg-muted/20 text-xs text-muted-foreground flex items-start gap-2.5"

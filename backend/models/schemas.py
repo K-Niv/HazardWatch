@@ -24,6 +24,19 @@ class DataQualityMetrics(BaseModel):
     completeness_pct: float = Field(..., description="Percentage of original valid daily records")
 
 
+class HazardDetail(BaseModel):
+    """
+    Detailed results for a specific hazard type (heatwave or rainfall).
+    """
+    hazard_type: str = Field(..., description="Hazard type ('heatwave' or 'rainfall')")
+    threshold: float = Field(..., description="Regional threshold used for hazard detection")
+    total_events: int = Field(..., description="Total hazard events identified")
+    events: List[Union[HeatwaveEvent, RainfallEvent]] = Field(..., description="List of detected hazard events")
+    yearly_counts: Dict[str, int] = Field(..., description="Annual count of hazard events")
+    rolling_avg: Dict[str, float] = Field(..., description="5-year rolling average of annual events")
+    insights: List[str] = Field(..., description="Programmatic insights and trend conclusions")
+
+
 class AnalyzeResponse(BaseModel):
     """
     Response schema for the /api/analyze endpoint.
@@ -40,6 +53,10 @@ class AnalyzeResponse(BaseModel):
     insights: List[str] = Field(..., description="Programmatic insights and trend conclusions")
     cached: bool = Field(default=False, description="Whether data was served from MongoDB cache")
     data_quality: Optional[DataQualityMetrics] = Field(default=None, description="Data quality metrics")
+    hazards: Optional[Dict[str, HazardDetail]] = Field(
+        default=None,
+        description="Dual hazard analysis dictionary containing both heatwave and rainfall datasets",
+    )
 
 
 class AISummaryRequest(BaseModel):
