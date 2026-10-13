@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Info,
   Loader2,
+  Clock,
 } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,12 +26,14 @@ import CitySearch from '@/components/CitySearch'
 import MapDisplay from '@/components/MapDisplay'
 import YearRangePicker from '@/components/YearRangePicker'
 import FrequencyChart from '@/components/FrequencyChart'
+import IntensityChart from '@/components/IntensityChart'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import './App.css'
 
 export default function App() {
   // Global control state for the dashboard layout
   const [selectedHazard, setSelectedHazard] = useState('heatwave')
+  const [activeChartTab, setActiveChartTab] = useState('frequency')
   const [selectedCity, setSelectedCity] = useState({
     name: 'New Delhi',
     country: 'India',
@@ -477,26 +480,59 @@ export default function App() {
 
               {/* Primary Visualization Deck Slot (2.6 & 2.7) */}
               <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-start sm:justify-between pb-3 gap-3">
                   <div>
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                      Annual Hazard Frequency & 5-Year Rolling Average
+                      {activeChartTab === 'frequency' ? (
+                        <>
+                          <TrendingUp className="w-4 h-4 text-primary" />
+                          Annual Hazard Frequency & 5-Year Rolling Average
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-4 h-4 text-primary" />
+                          Hazard Event Duration & Peak Severity Timeline
+                        </>
+                      )}
                     </CardTitle>
                     <CardDescription className="text-xs mt-1">
-                      Historical event count per year with smoothed multi-year climate trajectory.
+                      {activeChartTab === 'frequency'
+                        ? 'Historical event count per year with smoothed multi-year climate trajectory.'
+                        : 'Individual consecutive event duration (days) juxtaposed with peak hazard intensity.'}
                     </CardDescription>
                   </div>
-                  <Badge variant="outline" className="text-xs font-mono">
-                    Chart.js
-                  </Badge>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Tabs value={activeChartTab} onValueChange={setActiveChartTab} className="h-8">
+                      <TabsList className="h-8 bg-muted/60 p-0.5">
+                        <TabsTrigger value="frequency" className="text-xs h-7 px-3 flex items-center gap-1.5">
+                          <TrendingUp className="w-3 h-3" />
+                          Annual Frequency
+                        </TabsTrigger>
+                        <TabsTrigger value="intensity" className="text-xs h-7 px-3 flex items-center gap-1.5">
+                          <Clock className="w-3 h-3" />
+                          Severity & Duration
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                    <Badge variant="outline" className="text-xs font-mono hidden sm:inline-flex">
+                      Chart.js
+                    </Badge>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-2">
-                  <FrequencyChart
-                    data={activeHazardData}
-                    hazardType={selectedHazard}
-                    loading={loading}
-                  />
+                  {activeChartTab === 'frequency' ? (
+                    <FrequencyChart
+                      data={activeHazardData}
+                      hazardType={selectedHazard}
+                      loading={loading}
+                    />
+                  ) : (
+                    <IntensityChart
+                      data={activeHazardData}
+                      hazardType={selectedHazard}
+                      loading={loading}
+                    />
+                  )}
                 </CardContent>
               </Card>
 
