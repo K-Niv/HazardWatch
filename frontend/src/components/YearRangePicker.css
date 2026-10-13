@@ -1,0 +1,17 @@
+/* YearRangePicker styling enhancements */
+.year-picker-card {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.year-picker-card:focus-within {
+  border-color: rgba(var(--primary), 0.5);
+}
+
+/* Custom styled thumb for range slider */
+[data-slot="slider-thumb"] {
+  cursor: grab;
+}
+
+[data-slot="slider-thumb"]:active {
+  cursor: grabbing;
+}

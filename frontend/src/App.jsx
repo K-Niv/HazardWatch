@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   Database,
   ExternalLink,
-  ChevronRight,
   TrendingUp,
   Info
 } from 'lucide-react'
@@ -22,6 +21,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import CitySearch from '@/components/CitySearch'
 import MapDisplay from '@/components/MapDisplay'
+import YearRangePicker from '@/components/YearRangePicker'
 import './App.css'
 
 export default function App() {
@@ -33,7 +33,7 @@ export default function App() {
     lat: 28.6139,
     lon: 77.2090
   })
-  const [yearRange] = useState({ start: 1990, end: 2020 })
+  const [yearRange, setYearRange] = useState({ start: 1990, end: 2020 })
   const [serverOnline] = useState(true)
 
   const isHeatwave = selectedHazard === 'heatwave'
@@ -198,18 +198,7 @@ export default function App() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Slider & Year Controls (Implemented in Commit 2.5) */}
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 p-2.5 rounded-lg border border-border/60 bg-muted/30 text-center">
-                      <p className="text-[10px] uppercase text-muted-foreground font-semibold">Start Year</p>
-                      <p className="text-base font-bold font-mono text-foreground">{yearRange.start}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    <div className="flex-1 p-2.5 rounded-lg border border-border/60 bg-muted/30 text-center">
-                      <p className="text-[10px] uppercase text-muted-foreground font-semibold">End Year</p>
-                      <p className="text-base font-bold font-mono text-foreground">{yearRange.end}</p>
-                    </div>
-                  </div>
+                  <YearRangePicker yearRange={yearRange} onChange={setYearRange} />
 
                   <Button className="w-full font-semibold shadow-md gap-2" id="trigger-analysis-btn">
                     <Activity className="w-4 h-4" />
