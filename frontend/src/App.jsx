@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import CitySearch from '@/components/CitySearch'
 import './App.css'
 
 export default function App() {
@@ -174,40 +175,8 @@ export default function App() {
                     Search any global city or select a historical hotspot.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* City Search Input Placeholder (Implemented in Commit 2.2) */}
-                  <div className="relative">
-                    <div className="flex h-10 w-full rounded-md border border-input bg-muted/30 px-3 py-2 text-sm text-muted-foreground items-center gap-2">
-                      <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <span>Search global cities...</span>
-                    </div>
-                  </div>
-
-                  {/* Preset Hotspot Badges */}
-                  <div className="space-y-1.5">
-                    <p className="text-[11px] font-medium text-muted-foreground">Quick Presets:</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {[
-                        { name: 'New Delhi', country: 'India', lat: 28.61, lon: 77.20 },
-                        { name: 'Phoenix', country: 'USA', lat: 33.44, lon: -112.07 },
-                        { name: 'London', country: 'UK', lat: 51.50, lon: -0.12 },
-                        { name: 'Tokyo', country: 'Japan', lat: 35.67, lon: 139.65 },
-                      ].map((city) => (
-                        <button
-                          key={city.name}
-                          type="button"
-                          onClick={() => setSelectedCity(city)}
-                          className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
-                            selectedCity.name === city.name
-                              ? 'bg-primary/20 border-primary text-primary font-medium'
-                              : 'border-border/60 bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground'
-                          }`}
-                        >
-                          {city.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                <CardContent>
+                  <CitySearch selectedCity={selectedCity} onSelect={setSelectedCity} />
                 </CardContent>
               </Card>
 
