@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import CitySearch from '@/components/CitySearch'
+import MapDisplay from '@/components/MapDisplay'
 import './App.css'
 
 export default function App() {
@@ -231,18 +232,13 @@ export default function App() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="h-44 w-full bg-muted/20 border-t border-border/40 relative flex items-center justify-center">
-                    {/* Placeholder container where MapDisplay component will mount in Commit 2.3 */}
-                    <div className="text-center p-4">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 text-primary mx-auto flex items-center justify-center mb-2 animate-bounce">
-                        <MapPin className="w-4 h-4" />
-                      </div>
-                      <p className="text-xs font-medium text-foreground">{selectedCity.name}, {selectedCity.country}</p>
-                      <p className="text-[11px] font-mono text-muted-foreground">
-                        {selectedCity.lat.toFixed(4)}° N, {selectedCity.lon.toFixed(4)}° E
-                      </p>
-                    </div>
-                  </div>
+                  <MapDisplay
+                    lat={selectedCity.lat}
+                    lon={selectedCity.lon}
+                    cityName={selectedCity.name}
+                    country={selectedCity.country}
+                    hazardType={selectedHazard}
+                  />
                 </CardContent>
               </Card>
             </aside>
