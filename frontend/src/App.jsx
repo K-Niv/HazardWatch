@@ -12,7 +12,6 @@ import {
   ExternalLink,
   TrendingUp,
   AlertTriangle,
-  Info,
   Loader2,
   Clock,
 } from 'lucide-react'
@@ -27,6 +26,7 @@ import MapDisplay from '@/components/MapDisplay'
 import YearRangePicker from '@/components/YearRangePicker'
 import FrequencyChart from '@/components/FrequencyChart'
 import IntensityChart from '@/components/IntensityChart'
+import InsightsPanel from '@/components/InsightsPanel'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import './App.css'
 
@@ -538,46 +538,12 @@ export default function App() {
 
               {/* Insights Panel & AI Summary Deck Slot (2.8 & 2.9) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Programmatic Insights Panel Slot */}
-                <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-semibold flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-primary" />
-                        Programmatic Insights
-                      </span>
-                      <Badge variant="secondary" className="text-[10px]">
-                        Rule Engine
-                      </Badge>
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Statistical conclusions generated directly from time series data.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2.5">
-                    {loading ? (
-                      <div className="space-y-2">
-                        <div className="h-10 rounded-lg bg-muted/30 animate-pulse" />
-                        <div className="h-10 rounded-lg bg-muted/30 animate-pulse" />
-                        <div className="h-10 rounded-lg bg-muted/30 animate-pulse" />
-                      </div>
-                    ) : activeHazardData?.insights && activeHazardData.insights.length > 0 ? (
-                      activeHazardData.insights.map((insight, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 rounded-lg border border-border/40 bg-muted/20 text-xs text-muted-foreground flex items-start gap-2.5"
-                        >
-                          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                          <span className="leading-relaxed text-foreground/90">{insight}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-3 rounded-lg border border-border/40 bg-muted/20 text-xs text-muted-foreground">
-                        Click &quot;Analyze Climate Hazards&quot; to generate empirical climate insights.
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                {/* Programmatic Insights Panel Slot (2.8) */}
+                <InsightsPanel
+                  data={activeHazardData}
+                  hazardType={selectedHazard}
+                  loading={loading}
+                />
 
                 {/* AI Executive Summary Slot */}
                 <Card className="border-border/60 bg-card/80 backdrop-blur-sm relative overflow-hidden">
