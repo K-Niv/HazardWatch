@@ -51,17 +51,6 @@ export default function MapDisplay({
     })
   }, [isHeatwave])
 
-  // Carto API Key from environment (.env)
-  const cartoApiKey =
-    import.meta.env.VITE_CARTO_BASE_API_KEY ||
-    import.meta.env.CARTO_BASE_API_KEY ||
-    ''
-
-  // Carto Basemaps requires ?key= parameter. Fall back to OpenStreetMap if no key is supplied.
-  const tileUrl = cartoApiKey
-    ? `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${cartoApiKey}`
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-
   return (
     <div className="relative w-full h-52 rounded-b-lg overflow-hidden border-t border-border/40">
       <MapContainer
@@ -69,12 +58,12 @@ export default function MapDisplay({
         zoom={9}
         scrollWheelZoom={false}
         attributionControl={false}
-        className="w-full h-full z-10"
+        className="w-full h-full z-10 dark-osm-map"
       >
-        {/* CartoDB Dark Matter tile layer authenticated with API key */}
+        {/* OpenStreetMap public tiles with CSS dark observatory filter (zero API keys required) */}
         <TileLayer
-          url={tileUrl}
-          subdomains="abcd"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          subdomains={['a', 'b', 'c']}
           maxZoom={19}
         />
 

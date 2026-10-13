@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Flame,
   CloudRain,
@@ -11,7 +11,9 @@ import {
   Database,
   ExternalLink,
   TrendingUp,
-  Info
+  AlertTriangle,
+  Info,
+  Loader2,
 } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +24,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import CitySearch from '@/components/CitySearch'
 import MapDisplay from '@/components/MapDisplay'
 import YearRangePicker from '@/components/YearRangePicker'
+import { useAnalysis } from '@/hooks/useAnalysis'
 import './App.css'
 
 export default function App() {
@@ -31,12 +34,76 @@ export default function App() {
     name: 'New Delhi',
     country: 'India',
     lat: 28.6139,
-    lon: 77.2090
+    lon: 77.2090,
   })
   const [yearRange, setYearRange] = useState({ start: 1990, end: 2020 })
-  const [serverOnline] = useState(true)
 
   const isHeatwave = selectedHazard === 'heatwave'
+
+  // Primary API analysis hook
+  const {
+    data,
+    loading,
+    error,
+    lastAnalyzedParams,
+    analyze,
+  } = useAnalysis({
+    lat: selectedCity.lat,
+    lon: selectedCity.lon,
+    startYear: yearRange.start,
+    endYear: yearRange.end,
+    hazard: selectedHazard,
+    autoFetchOnMount: true,
+  })
+
+  // Check if staged user parameters differ from currently analyzed dataset
+  const hasPendingChanges = useMemo(() => {
+    if (!lastAnalyzedParams) return false
+    const latDiff = Math.abs((lastAnalyzedParams.lat ?? 0) - selectedCity.lat) > 0.001
+    const lonDiff = Math.abs((lastAnalyzedParams.lon ?? 0) - selectedCity.lon) > 0.001
+    const yearDiff =
+      lastAnalyzedParams.startYear !== yearRange.start ||
+      lastAnalyzedParams.endYear !== yearRange.end
+    const hazardDiff = lastAnalyzedParams.hazard !== selectedHazard
+    return latDiff || lonDiff || yearDiff || hazardDiff
+  }, [
+    lastAnalyzedParams,
+    selectedCity.lat,
+    selectedCity.lon,
+    yearRange.start,
+    yearRange.end,
+    selectedHazard,
+  ])
+
+  // Handle Hazard Mode Toggle
+  const handleHazardChange = (newHazard) => {
+    setSelectedHazard(newHazard)
+  }
+
+  // Handle "Analyze Climate Hazards" button click
+  const handleAnalyzeClick = () => {
+    analyze({
+      lat: selectedCity.lat,
+      lon: selectedCity.lon,
+      startYear: yearRange.start,
+      endYear: yearRange.end,
+      hazard: selectedHazard,
+    })
+  }
+
+  // Compute Peak Activity Year from live dataset
+  const peakYearInfo = useMemo(() => {
+    if (!data?.yearly_counts) return { year: '—', count: 0 }
+    let maxYear = '—'
+    let maxCount = 0
+    for (const [y, cnt] of Object.entries(data.yearly_counts)) {
+      if (cnt > maxCount) {
+        maxCount = cnt
+        maxYear = y
+      }
+    }
+    return { year: maxYear, count: maxCount }
+  }, [data])
 
   return (
     <TooltipProvider>
@@ -77,23 +144,28 @@ export default function App() {
             {/* Status & Quick Links */}
             <div className="flex items-center gap-3">
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/80 bg-muted/40 text-xs">
-                <span className="relative flex h-2 w-2">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${serverOnline ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${serverOnline ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
-                </span>
-                <span className="text-muted-foreground">Backend & Atlas:</span>
-                <span className={`font-medium ${serverOnline ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {serverOnline ? 'Connected' : 'Offline'}
-                </span>
+                <Activity className="w-3.5 h-3.5 text-primary" />
+                <span className="text-muted-foreground">Engine:</span>
+                <span className="font-medium text-foreground">ERA5 Reanalysis</span>
               </div>
 
-              <Badge
-                variant="secondary"
-                className="hidden lg:inline-flex items-center gap-1.5 py-1 px-2.5 text-xs text-muted-foreground"
-              >
-                <Database className="w-3 h-3 text-cyan-400" />
-                <span>Open-Meteo ERA5 / Atlas Cache</span>
-              </Badge>
+              {data?.cached ? (
+                <Badge
+                  variant="secondary"
+                  className="hidden lg:inline-flex items-center gap-1.5 py-1 px-2.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30"
+                >
+                  <Database className="w-3 h-3 text-emerald-400" />
+                  <span>⚡ Cached via MongoDB</span>
+                </Badge>
+              ) : (
+                <Badge
+                  variant="secondary"
+                  className="hidden lg:inline-flex items-center gap-1.5 py-1 px-2.5 text-xs text-muted-foreground"
+                >
+                  <Database className="w-3 h-3 text-cyan-400" />
+                  <span>Open-Meteo ERA5 / Atlas Cache</span>
+                </Badge>
+              )}
 
               <a
                 href="https://github.com/K-Niv/HazardWatch"
@@ -111,6 +183,24 @@ export default function App() {
 
         {/* Main Application Container */}
         <main className="container mx-auto px-4 lg:px-8 py-6 flex-1 flex flex-col gap-6">
+          {/* Global Error Banner */}
+          {error && (
+            <div className="p-4 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-300 text-xs flex items-center justify-between gap-3 shadow-md animate-in fade-in">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{error}</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAnalyzeClick}
+                className="h-7 text-xs border-rose-500/30 hover:bg-rose-500/20 text-rose-200"
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+
           {/* Top Control Bar / Quick Switcher */}
           <section className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm">
             <div className="flex flex-wrap items-center gap-3">
@@ -119,7 +209,7 @@ export default function App() {
               </span>
               <Tabs
                 value={selectedHazard}
-                onValueChange={setSelectedHazard}
+                onValueChange={handleHazardChange}
                 className="w-auto"
               >
                 <TabsList className="bg-muted/80 p-1">
@@ -142,17 +232,25 @@ export default function App() {
             </div>
 
             {/* Current Target Location & Range Summary */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-primary" />
                 <span className="font-medium text-foreground">{selectedCity.name}, {selectedCity.country}</span>
                 <span className="font-mono opacity-60">({selectedCity.lat.toFixed(2)}°, {selectedCity.lon.toFixed(2)}°)</span>
               </div>
-              <div className="h-4 w-px bg-border" />
+              <div className="h-4 w-px bg-border hidden sm:block" />
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-primary" />
                 <span className="font-mono font-medium text-foreground">{yearRange.start} – {yearRange.end}</span>
               </div>
+              {hasPendingChanges && (
+                <>
+                  <div className="h-4 w-px bg-border hidden sm:block" />
+                  <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/40 bg-amber-500/10 font-mono py-0">
+                    Staged • Click Analyze
+                  </Badge>
+                </>
+              )}
             </div>
           </section>
 
@@ -181,7 +279,7 @@ export default function App() {
                 </CardContent>
               </Card>
 
-              {/* Year Range Picker Card Slot (2.5) */}
+              {/* Year Range Picker Card Slot (2.4) */}
               <Card id="year-range-panel" className="border-border/60 bg-card/80 backdrop-blur-sm">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold flex items-center justify-between">
@@ -200,10 +298,47 @@ export default function App() {
                 <CardContent className="space-y-4">
                   <YearRangePicker yearRange={yearRange} onChange={setYearRange} />
 
-                  <Button className="w-full font-semibold shadow-md gap-2" id="trigger-analysis-btn">
-                    <Activity className="w-4 h-4" />
-                    Analyze Climate Hazards
+                  <Button
+                    onClick={handleAnalyzeClick}
+                    disabled={loading}
+                    className={`w-full font-semibold shadow-md gap-2 transition-all duration-200 cursor-pointer ${
+                      hasPendingChanges
+                        ? isHeatwave
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold shadow-orange-500/25 ring-2 ring-amber-400/50'
+                          : 'bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-bold shadow-cyan-500/25 ring-2 ring-cyan-400/50'
+                        : isHeatwave
+                        ? 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white shadow-orange-500/20'
+                        : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-cyan-500/20'
+                    }`}
+                    id="trigger-analysis-btn"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Querying Meteorological API...</span>
+                      </>
+                    ) : hasPendingChanges ? (
+                      <>
+                        <Activity className="w-4 h-4" />
+                        <span>Run Analysis (Staged Params)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Activity className="w-4 h-4" />
+                        <span>Analyze {isHeatwave ? 'Heatwaves' : 'Heavy Rainfall'}</span>
+                      </>
+                    )}
                   </Button>
+
+                  {hasPendingChanges && (
+                    <div className="flex items-center justify-center gap-1.5 text-[11px] text-amber-400 font-medium">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                      </span>
+                      <span>Parameters staged — click button to run analysis</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -216,7 +351,7 @@ export default function App() {
                       Geographic Pin
                     </span>
                     <Badge variant="outline" className="text-[10px]">
-                      Leaflet / OSM
+                      OpenStreetMap
                     </Badge>
                   </CardTitle>
                 </CardHeader>
@@ -243,7 +378,11 @@ export default function App() {
                       <Activity className="w-3.5 h-3.5 text-primary" />
                     </CardDescription>
                     <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
-                      7
+                      {loading ? (
+                        <span className="inline-block w-8 h-6 bg-muted/60 animate-pulse rounded" />
+                      ) : (
+                        data?.total_events ?? '—'
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
@@ -260,7 +399,13 @@ export default function App() {
                       <Thermometer className="w-3.5 h-3.5 text-orange-400" />
                     </CardDescription>
                     <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
-                      {isHeatwave ? '41.5°C' : '48.2 mm'}
+                      {loading ? (
+                        <span className="inline-block w-14 h-6 bg-muted/60 animate-pulse rounded" />
+                      ) : data?.threshold != null ? (
+                        isHeatwave ? `${data.threshold}°C` : `${data.threshold} mm`
+                      ) : (
+                        '—'
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
@@ -277,12 +422,18 @@ export default function App() {
                       <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
                     </CardDescription>
                     <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
-                      2019
+                      {loading ? (
+                        <span className="inline-block w-12 h-6 bg-muted/60 animate-pulse rounded" />
+                      ) : (
+                        peakYearInfo.year
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <p className="text-[11px] text-muted-foreground">
-                      Record 3 events in single season
+                      {peakYearInfo.count > 0
+                        ? `Record ${peakYearInfo.count} event${peakYearInfo.count > 1 ? 's' : ''} in season`
+                        : 'No events detected'}
                     </p>
                   </CardContent>
                 </Card>
@@ -294,7 +445,11 @@ export default function App() {
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                     </CardDescription>
                     <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1 text-emerald-400">
-                      100%
+                      {loading ? (
+                        <span className="inline-block w-10 h-6 bg-muted/60 animate-pulse rounded" />
+                      ) : (
+                        `${data?.data_quality?.completeness_pct ?? 100}%`
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
@@ -305,7 +460,7 @@ export default function App() {
                 </Card>
               </div>
 
-              {/* Primary Visualization Deck Slot (2.7 & 2.8) */}
+              {/* Primary Visualization Deck Slot (2.6 & 2.7) */}
               <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <div>
@@ -322,20 +477,26 @@ export default function App() {
                   </Badge>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  {/* Chart Container Placeholder (Implemented in Commit 2.7) */}
+                  {/* Chart Container Placeholder (Implemented in Commit 2.6) */}
                   <div className="h-64 rounded-lg border border-border/40 bg-muted/20 flex flex-col items-center justify-center text-center p-6">
                     <Activity className="w-8 h-8 text-muted-foreground mb-2 animate-pulse" />
                     <p className="text-sm font-medium text-foreground">
-                      Frequency Chart Ready for Data
+                      {loading ? 'Retrieving Historical Climate Observations...' : 'Frequency Chart Ready for Chart.js'}
                     </p>
                     <p className="text-xs text-muted-foreground max-w-sm mt-1">
-                      Will render annual counts and 5-year rolling trendlines upon executing API query.
+                      {data ? (
+                        <span className="font-mono text-emerald-400">
+                          ✓ {data.total_events} hazard events loaded across {Object.keys(data.yearly_counts || {}).length} years
+                        </span>
+                      ) : (
+                        'Will render annual counts and 5-year rolling trendlines upon executing API query.'
+                      )}
                     </p>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Insights Panel & AI Summary Deck Slot (2.9 & 2.10) */}
+              {/* Insights Panel & AI Summary Deck Slot (2.8 & 2.9) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Programmatic Insights Panel Slot */}
                 <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
@@ -354,18 +515,27 @@ export default function App() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2.5">
-                    <div className="p-3 rounded-lg border border-border/40 bg-muted/20 text-xs text-muted-foreground flex items-start gap-2.5">
-                      <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                      <span>A total of 7 heatwave events occurred between 1990 and 2020.</span>
-                    </div>
-                    <div className="p-3 rounded-lg border border-border/40 bg-muted/20 text-xs text-muted-foreground flex items-start gap-2.5">
-                      <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <span>Peak heatwave activity was recorded in 2019 with 3 distinct events.</span>
-                    </div>
-                    <div className="p-3 rounded-lg border border-border/40 bg-muted/20 text-xs text-muted-foreground flex items-start gap-2.5">
-                      <Thermometer className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-                      <span>The hottest event peaked at 45.2°C, persisting for 5 consecutive days.</span>
-                    </div>
+                    {loading ? (
+                      <div className="space-y-2">
+                        <div className="h-10 rounded-lg bg-muted/30 animate-pulse" />
+                        <div className="h-10 rounded-lg bg-muted/30 animate-pulse" />
+                        <div className="h-10 rounded-lg bg-muted/30 animate-pulse" />
+                      </div>
+                    ) : data?.insights && data.insights.length > 0 ? (
+                      data.insights.map((insight, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-lg border border-border/40 bg-muted/20 text-xs text-muted-foreground flex items-start gap-2.5"
+                        >
+                          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                          <span className="leading-relaxed text-foreground/90">{insight}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-3 rounded-lg border border-border/40 bg-muted/20 text-xs text-muted-foreground">
+                        Click &quot;Analyze Climate Hazards&quot; to generate empirical climate insights.
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -388,9 +558,13 @@ export default function App() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <p className="text-xs leading-relaxed text-muted-foreground">
-                      Between 1990 and 2020 in New Delhi, 7 severe heatwave events were documented with peak thermal intensity concentrating in 2019, reflecting escalating urban heat extremes.
+                      Synthesize key multi-decadal hazard trajectories, frequency shifts, and peak intensity anomalies using Google Gemini.
                     </p>
-                    <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 border-purple-500/30 hover:bg-purple-500/10 hover:text-purple-300">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs gap-1.5 border-purple-500/30 hover:bg-purple-500/10 hover:text-purple-300"
+                    >
                       <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                       Generate AI Summary
                     </Button>

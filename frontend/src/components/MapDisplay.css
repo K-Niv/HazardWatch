@@ -1,4 +1,9 @@
 /* MapDisplay styles and custom pin animations */
+.dark-osm-map .leaflet-tile-pane {
+  /* Invert light OSM tiles into dark observatory theme while preserving realistic geography hues */
+  filter: brightness(0.65) invert(1) contrast(2.5) hue-rotate(200deg) saturate(0.3) brightness(0.75);
+}
+
 .map-beacon-pin {
   display: flex;
   align-items: center;
