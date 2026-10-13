@@ -12,7 +12,6 @@ import {
   ExternalLink,
   ChevronRight,
   TrendingUp,
-  AlertTriangle,
   Info
 } from 'lucide-react'
 
@@ -32,8 +31,8 @@ export default function App() {
     lat: 28.6139,
     lon: 77.2090
   })
-  const [yearRange, setYearRange] = useState({ start: 1990, end: 2020 })
-  const [serverOnline, setServerOnline] = useState(true)
+  const [yearRange] = useState({ start: 1990, end: 2020 })
+  const [serverOnline] = useState(true)
 
   const isHeatwave = selectedHazard === 'heatwave'
 
@@ -77,11 +76,13 @@ export default function App() {
             <div className="flex items-center gap-3">
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/80 bg-muted/40 text-xs">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${serverOnline ? 'bg-emerald-400' : 'bg-rose-400'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${serverOnline ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
                 </span>
                 <span className="text-muted-foreground">Backend & Atlas:</span>
-                <span className="text-emerald-400 font-medium">Connected</span>
+                <span className={`font-medium ${serverOnline ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {serverOnline ? 'Connected' : 'Offline'}
+                </span>
               </div>
 
               <Badge
