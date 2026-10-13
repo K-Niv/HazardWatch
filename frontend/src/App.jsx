@@ -24,6 +24,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import CitySearch from '@/components/CitySearch'
 import MapDisplay from '@/components/MapDisplay'
 import YearRangePicker from '@/components/YearRangePicker'
+import FrequencyChart from '@/components/FrequencyChart'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import './App.css'
 
@@ -476,23 +477,12 @@ export default function App() {
                     Chart.js
                   </Badge>
                 </CardHeader>
-                <CardContent className="pt-4">
-                  {/* Chart Container Placeholder (Implemented in Commit 2.6) */}
-                  <div className="h-64 rounded-lg border border-border/40 bg-muted/20 flex flex-col items-center justify-center text-center p-6">
-                    <Activity className="w-8 h-8 text-muted-foreground mb-2 animate-pulse" />
-                    <p className="text-sm font-medium text-foreground">
-                      {loading ? 'Retrieving Historical Climate Observations...' : 'Frequency Chart Ready for Chart.js'}
-                    </p>
-                    <p className="text-xs text-muted-foreground max-w-sm mt-1">
-                      {data ? (
-                        <span className="font-mono text-emerald-400">
-                          ✓ {data.total_events} hazard events loaded across {Object.keys(data.yearly_counts || {}).length} years
-                        </span>
-                      ) : (
-                        'Will render annual counts and 5-year rolling trendlines upon executing API query.'
-                      )}
-                    </p>
-                  </div>
+                <CardContent className="pt-2">
+                  <FrequencyChart
+                    data={data}
+                    hazardType={selectedHazard}
+                    loading={loading}
+                  />
                 </CardContent>
               </Card>
 
