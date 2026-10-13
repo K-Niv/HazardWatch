@@ -105,35 +105,34 @@ def clean_weather_data(
 
         curr_dt += one_day
 
-    # 3. Linear interpolation for missing / filtered temperatures
+    # 3. Linear interpolation for missing / filtered temperatures (two-pass)
     n = len(continuous_tmax)
     filled_tmax: List[float] = [0.0] * n
 
-    # Find first valid temperature as initial anchor
+    # Default anchor for gaps at the start of the series
     first_valid = next((t for t in continuous_tmax if t is not None), 20.0)
 
-    last_val = first_valid
-    for i in range(n):
+    i = 0
+    while i < n:
         if continuous_tmax[i] is not None:
-            last_val = continuous_tmax[i]
-            filled_tmax[i] = round(float(last_val), 2)
+            filled_tmax[i] = round(float(continuous_tmax[i]), 2)
+            i += 1
         else:
-            # Look ahead for next valid value to interpolate
-            next_valid = None
-            next_idx = i + 1
-            while next_idx < n:
-                if continuous_tmax[next_idx] is not None:
-                    next_valid = continuous_tmax[next_idx]
-                    break
-                next_idx += 1
+            # Identify the full extent of this gap
+            gap_start = i
+            while i < n and continuous_tmax[i] is None:
+                i += 1
+            gap_end = i  # first valid index after the gap, or n
 
-            if next_valid is not None:
-                # Linear interpolation
-                weight = 1.0 / (next_idx - i + 1)
-                interpolated = last_val + (next_valid - last_val) * weight
-                filled_tmax[i] = round(float(interpolated), 2)
-            else:
-                filled_tmax[i] = round(float(last_val), 2)
+            # Determine left and right anchor values
+            left_val = filled_tmax[gap_start - 1] if gap_start > 0 else first_valid
+            right_val = float(continuous_tmax[gap_end]) if gap_end < n else left_val
+
+            # Fill each position proportionally across the gap
+            span = gap_end - gap_start + 1
+            for j in range(gap_start, gap_end):
+                fraction = (j - gap_start + 1) / span
+                filled_tmax[j] = round(left_val + (right_val - left_val) * fraction, 2)
 
     total_days = len(continuous_dates)
     valid_original_count = total_days - missing_days_filled - temp_outliers_fixed

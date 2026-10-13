@@ -90,7 +90,11 @@ def detect_heavy_rainfall(
         is_extreme_downpour = peak_daily >= single_day_threshold
 
         if is_prolonged or is_extreme_downpour:
-            event_type = "extreme_downpour" if is_extreme_downpour else "prolonged_heavy_rain"
+            event_type = (
+                "prolonged_extreme_rain" if is_prolonged and is_extreme_downpour
+                else "extreme_downpour" if is_extreme_downpour
+                else "prolonged_heavy_rain"
+            )
             event = RainfallEvent(
                 start_date=current_streak_dates[0],
                 end_date=current_streak_dates[-1],

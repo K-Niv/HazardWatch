@@ -1,14 +1,33 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from routes import ai_summary, analyze, health
-from services import weather
+
+# Configure logging so INFO/DEBUG messages from services are visible
+logging.basicConfig(
+    level=logging.DEBUG if settings.DEBUG else logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup/shutdown lifecycle handler."""
+    from database import init_db, close_db
+
+    init_db()
+    yield
+    close_db()
+
 
 app = FastAPI(
     title=settings.APP_NAME,
     description="Climate Hazard Trend Analyzer API - Heatwave & Heavy Rainfall Analysis",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # Configure CORS
@@ -34,19 +53,3 @@ async def root():
         "status": "online",
     }
 
-
-@app.get("/weather/{lat}/{lon}/{start_year}/{end_year}")
-async def get_weather(lat: float, lon: float, start_year: str, end_year: str):
-    """
-    Fetch historical weather data for a specific location.
-
-    Args:
-        lat: Latitude of the location
-        lon: Longitude of the location
-        start_year: Start year (e.g., 1990) or date (YYYY-MM-DD)
-        end_year: End year (e.g., 2020) or date (YYYY-MM-DD)
-
-    Returns:
-        JSON containing historical weather data (daily tmax and precipitation)
-    """
-    return await weather.get_weather_data(lat, lon, start_year, end_year)

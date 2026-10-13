@@ -14,11 +14,22 @@ client = MongoClient(
 db = client[settings.MONGODB_DB_NAME]
 weather_cache_collection = db["weather_cache"]
 
-# Create an index for fast location lookups
-try:
-    weather_cache_collection.create_index([("lat", 1), ("lon", 1)])
-except Exception as e:
-    logger.warning("Could not create index on weather_cache: %s", e)
+
+def init_db() -> None:
+    """Create indexes and verify connectivity. Call from FastAPI lifespan startup."""
+    try:
+        weather_cache_collection.create_index([
+            ("lat", 1), ("lon", 1), ("start_date", 1), ("end_date", 1)
+        ])
+        logger.info("MongoDB indexes ensured on weather_cache.")
+    except Exception as e:
+        logger.warning("Could not create index on weather_cache: %s", e)
+
+
+def close_db() -> None:
+    """Close the MongoDB client connection. Call from FastAPI lifespan shutdown."""
+    client.close()
+    logger.info("MongoDB connection closed.")
 
 
 def check_connection() -> bool:

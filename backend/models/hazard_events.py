@@ -25,5 +25,5 @@ class RainfallEvent(BaseModel):
     threshold_used: float = Field(..., description="Regional precipitation threshold used (mm)")
     event_type: str = Field(
         ...,
-        description="Type of event: 'prolonged_heavy_rain' (3+ days) or 'extreme_downpour' (daily precip >= 50mm)",
+        description="Type of event: 'prolonged_heavy_rain' (3+ days), 'extreme_downpour' (daily precip >= 50mm), or 'prolonged_extreme_rain' (both)",
     )
