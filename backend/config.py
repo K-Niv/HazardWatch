@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     MONGODB_URI: str = "mongodb://localhost:27017"
     MONGODB_DB_NAME: str = "hazardwatch"
-    GEMINI_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
     class Config:

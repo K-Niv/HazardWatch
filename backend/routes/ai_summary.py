@@ -9,7 +9,7 @@ router = APIRouter(tags=["AI Summary"])
 async def get_ai_summary(payload: AISummaryRequest):
     """
     Generate an AI-powered natural language summary of hazard analysis results.
-    Includes automatic programmatic fallback if Gemini API is unavailable or unconfigured.
+    Includes automatic programmatic fallback if the AI service is unavailable or unconfigured.
     """
     result = await ai_summary.generate_ai_summary(
         hazard_type=payload.hazard_type,

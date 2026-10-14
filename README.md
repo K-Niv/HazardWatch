@@ -17,7 +17,7 @@ HazardWatch allows users to:
 4. **Interactive Visualizations:** Frequency, duration, and intensity time-series charts with rolling averages.
 5. **Dual-Layer Insights:**
    - **Programmatic Insights:** Statistically grounded trends, percentage changes, and peak event records.
-   - **AI-Powered Summary:** On-demand synthesis powered by Google Gemini API.
+   - **AI-Powered Summary:** On-demand synthesis powered by Groq Cloud (Llama 3.3 70B).
 
 ---
 
@@ -55,7 +55,7 @@ HazardWatch allows users to:
 - **External APIs:**
   - [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) (Free, no API key required)
   - [Open-Meteo Geocoding API](https://open-meteo.com/en/docs/geocoding-api) (Global city search)
-  - [Google Gemini API](https://ai.google.dev/) (For natural language synthesis)
+  - [Groq Cloud API](https://console.groq.com/) (Ultra-fast Llama 3.3 70B natural language synthesis)
 
 ---
 

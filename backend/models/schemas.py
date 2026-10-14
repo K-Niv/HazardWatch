@@ -76,6 +76,9 @@ class AISummaryResponse(BaseModel):
     """
     Response schema for the AI summary endpoint.
     """
-    summary: str = Field(..., description="Generated executive summary paragraph")
+    summary: str = Field(..., description="Generated executive summary narrative")
     source: str = Field(..., description="Name of the model or source used")
     is_ai_generated: bool = Field(..., description="Flag indicating whether content is AI-generated")
+    risk_level: Optional[str] = Field(default="Elevated Risk", description="Threat level tier: Critical, High, Elevated, Moderate")
+    impacts: Optional[List[str]] = Field(default_factory=list, description="Sectoral vulnerability and urban impacts")
+    recommendations: Optional[List[str]] = Field(default_factory=list, description="Actionable adaptation and policy recommendations")

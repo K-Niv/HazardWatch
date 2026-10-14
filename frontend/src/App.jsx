@@ -3,7 +3,6 @@ import {
   Flame,
   CloudRain,
   Activity,
-  Sparkles,
   MapPin,
   Calendar,
   Thermometer,
@@ -27,6 +26,7 @@ import YearRangePicker from '@/components/YearRangePicker'
 import FrequencyChart from '@/components/FrequencyChart'
 import IntensityChart from '@/components/IntensityChart'
 import InsightsPanel from '@/components/InsightsPanel'
+import AISummary from '@/components/AISummary'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import './App.css'
 
@@ -545,37 +545,14 @@ export default function App() {
                   loading={loading}
                 />
 
-                {/* AI Executive Summary Slot */}
-                <Card className="border-border/60 bg-card/80 backdrop-blur-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none" />
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-semibold flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-purple-400" />
-                        Executive AI Synthesis
-                      </span>
-                      <Badge variant="outline" className="text-[10px] border-purple-500/40 text-purple-300">
-                        Gemini Flash Lite
-                      </Badge>
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Natural language summary synthesizing findings for stakeholders.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-xs leading-relaxed text-muted-foreground">
-                      Synthesize key multi-decadal hazard trajectories, frequency shifts, and peak intensity anomalies using Google Gemini.
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-xs gap-1.5 border-purple-500/30 hover:bg-purple-500/10 hover:text-purple-300"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                      Generate AI Summary
-                    </Button>
-                  </CardContent>
-                </Card>
+                {/* AI Executive Summary Slot (2.9) */}
+                <AISummary
+                  data={activeHazardData}
+                  hazardType={selectedHazard}
+                  selectedCity={selectedCity}
+                  yearRange={yearRange}
+                  analysisLoading={loading}
+                />
               </div>
             </div>
           </div>

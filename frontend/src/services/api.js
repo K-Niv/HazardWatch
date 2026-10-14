@@ -65,7 +65,7 @@ export async function fetchAnalysis({
 }
 
 /**
- * Requests an AI-generated executive summary from Google Gemini via backend.
+ * Requests an AI-generated executive climate brief via backend.
  *
  * @param {Object} payload
  * @param {string} payload.hazard_type
