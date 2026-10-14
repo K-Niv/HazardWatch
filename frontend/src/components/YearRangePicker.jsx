@@ -172,7 +172,7 @@ export default function YearRangePicker({
                   setValidationError(null)
                   onChange({ start: preset.start, end: preset.end })
                 }}
-                className={`text-left p-2 rounded-md border text-xs transition-all ${
+                className={`text-left p-2 rounded-md border text-xs transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-primary/20 border-primary text-primary font-medium shadow-sm'
                     : 'border-border/60 bg-muted/30 hover:bg-muted text-muted-foreground hover:text-foreground'

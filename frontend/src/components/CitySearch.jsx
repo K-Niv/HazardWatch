@@ -280,7 +280,7 @@ export default function CitySearch({ selectedCity, onSelect }) {
                 key={city.name}
                 type="button"
                 onClick={() => handleSelectCity(city)}
-                className={`text-xs px-2.5 py-1 rounded-md border transition-all ${
+                className={`text-xs px-2.5 py-1 rounded-md border transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-primary/20 border-primary text-primary font-medium shadow-sm'
                     : 'border-border/60 bg-muted/30 hover:bg-muted text-muted-foreground hover:text-foreground'

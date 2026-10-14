@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { TooltipProvider } from '@/components/ui/tooltip'
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 import CitySearch from '@/components/CitySearch'
 import MapDisplay from '@/components/MapDisplay'
 import YearRangePicker from '@/components/YearRangePicker'
@@ -172,7 +172,7 @@ export default function App() {
         </header>
 
         {/* Main Application Container */}
-        <main className="container mx-auto px-4 lg:px-8 py-6 flex-1 flex flex-col gap-6">
+        <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-5 sm:py-6 flex-1 flex flex-col gap-6">
           {/* Global Error Banner (2.10) */}
           <ErrorMessage
             error={error}
@@ -180,7 +180,7 @@ export default function App() {
           />
 
           {/* Top Control Bar / Quick Switcher */}
-          <section className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm">
+          <section className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-3.5 sm:p-4 rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm">
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Hazard Mode:
@@ -337,12 +337,21 @@ export default function App() {
               {loading && !activeHazardData ? (
                 <KPICardsSkeleton />
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm climate-card-interactive">
                     <CardHeader className="p-4 pb-2">
                       <CardDescription className="text-xs font-medium flex items-center justify-between">
                         <span>Total Events</span>
-                        <Activity className="w-3.5 h-3.5 text-primary" />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help inline-flex items-center">
+                              <Activity className="w-3.5 h-3.5 text-primary opacity-80 hover:opacity-100 transition-opacity" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-[11px] max-w-xs">
+                            Total multi-day extreme hazard events identified across the selected timeline window using WMO criteria.
+                          </TooltipContent>
+                        </Tooltip>
                       </CardDescription>
                       <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
                         {loading ? (
@@ -359,11 +368,22 @@ export default function App() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm climate-card-interactive">
                     <CardHeader className="p-4 pb-2">
                       <CardDescription className="text-xs font-medium flex items-center justify-between">
                         <span>{isHeatwave ? 'T95 Threshold' : 'R95p Threshold'}</span>
-                        <Thermometer className="w-3.5 h-3.5 text-orange-400" />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help inline-flex items-center">
+                              <Thermometer className="w-3.5 h-3.5 text-orange-400 opacity-80 hover:opacity-100 transition-opacity" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-[11px] max-w-xs">
+                            {isHeatwave
+                              ? 'Regional 95th percentile baseline temperature. Continuous runs of ≥3 days exceeding this limit qualify as heatwaves.'
+                              : 'Regional 95th percentile daily precipitation baseline. Daily totals exceeding this threshold qualify as extreme rainfall.'}
+                          </TooltipContent>
+                        </Tooltip>
                       </CardDescription>
                       <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
                         {loading ? (
@@ -382,11 +402,20 @@ export default function App() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm climate-card-interactive">
                     <CardHeader className="p-4 pb-2">
                       <CardDescription className="text-xs font-medium flex items-center justify-between">
                         <span>Peak Activity</span>
-                        <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help inline-flex items-center">
+                              <TrendingUp className="w-3.5 h-3.5 text-emerald-400 opacity-80 hover:opacity-100 transition-opacity" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-[11px] max-w-xs">
+                            Calendar year with the single highest count of identified extreme hazard events.
+                          </TooltipContent>
+                        </Tooltip>
                       </CardDescription>
                       <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
                         {loading ? (
@@ -405,11 +434,20 @@ export default function App() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm climate-card-interactive">
                     <CardHeader className="p-4 pb-2">
                       <CardDescription className="text-xs font-medium flex items-center justify-between">
                         <span>Data Quality</span>
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help inline-flex items-center">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 opacity-80 hover:opacity-100 transition-opacity" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-[11px] max-w-xs">
+                            Continuous daily observation continuity verified across the entire selected decadal timeline.
+                          </TooltipContent>
+                        </Tooltip>
                       </CardDescription>
                       <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1 text-emerald-400">
                         {loading ? (
@@ -484,7 +522,7 @@ export default function App() {
               </Card>
 
               {/* Insights Panel & AI Summary Deck Slot (2.8 & 2.9) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Programmatic Insights Panel Slot (2.8) */}
                 <InsightsPanel
                   data={activeHazardData}
@@ -507,7 +545,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="border-t border-border/60 bg-card/40 backdrop-blur-md py-6 text-xs text-muted-foreground mt-8">
-          <div className="container mx-auto px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="container mx-auto px-3 sm:px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-foreground">HazardWatch</span>
               <span>— Meteorological Climate Hazard Trend Analyzer</span>
