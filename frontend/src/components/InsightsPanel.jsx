@@ -13,7 +13,6 @@ import {
   Info,
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -36,9 +35,6 @@ function classifyInsight(text, hazardType) {
     return {
       category: 'Extreme Severity',
       Icon: isHeatwave ? Flame : CloudRain,
-      badgeClass: isHeatwave
-        ? 'border-orange-500/30 text-orange-400 bg-orange-500/10'
-        : 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10',
       iconClass: isHeatwave ? 'text-orange-400' : 'text-cyan-400',
       borderClass: isHeatwave
         ? 'border-orange-500/20 hover:border-orange-500/40 bg-orange-500/[0.03]'
@@ -55,7 +51,6 @@ function classifyInsight(text, hazardType) {
     return {
       category: 'Accelerating Trend',
       Icon: TrendingUp,
-      badgeClass: 'border-rose-500/30 text-rose-400 bg-rose-500/10',
       iconClass: 'text-rose-400',
       borderClass: 'border-rose-500/20 hover:border-rose-500/40 bg-rose-500/[0.03]',
     }
@@ -65,7 +60,6 @@ function classifyInsight(text, hazardType) {
     return {
       category: 'Decelerating Trend',
       Icon: TrendingDown,
-      badgeClass: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
       iconClass: 'text-emerald-400',
       borderClass: 'border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/[0.03]',
     }
@@ -75,7 +69,6 @@ function classifyInsight(text, hazardType) {
     return {
       category: 'Record Outlier',
       Icon: Award,
-      badgeClass: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
       iconClass: 'text-amber-400',
       borderClass: 'border-amber-500/20 hover:border-amber-500/40 bg-amber-500/[0.03]',
     }
@@ -85,7 +78,6 @@ function classifyInsight(text, hazardType) {
     return {
       category: 'Equilibrium',
       Icon: Minus,
-      badgeClass: 'border-blue-500/30 text-blue-400 bg-blue-500/10',
       iconClass: 'text-blue-400',
       borderClass: 'border-blue-500/20 hover:border-blue-500/40 bg-blue-500/[0.03]',
     }
@@ -95,7 +87,6 @@ function classifyInsight(text, hazardType) {
   return {
     category: 'Baseline Climatology',
     Icon: Calendar,
-    badgeClass: 'border-primary/30 text-primary bg-primary/10',
     iconClass: 'text-primary',
     borderClass: 'border-border/40 hover:border-border/80 bg-muted/15',
   }
@@ -141,11 +132,6 @@ export default function InsightsPanel({
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Activity className="w-4 h-4 text-primary" />
               Programmatic Insights
-              {rawInsights.length > 0 && !loading && (
-                <Badge variant="outline" className="text-[10px] font-mono ml-1 px-1.5 py-0">
-                  {rawInsights.length} Findings
-                </Badge>
-              )}
             </CardTitle>
             <CardDescription className="text-xs mt-1">
               Deterministic statistical conclusions derived from multi-decadal time series.
@@ -174,9 +160,6 @@ export default function InsightsPanel({
                 )}
               </Button>
             )}
-            <Badge variant="secondary" className="text-[10px] font-mono">
-              Rule Engine
-            </Badge>
           </div>
         </div>
       </CardHeader>
@@ -200,7 +183,7 @@ export default function InsightsPanel({
         ) : rawInsights.length > 0 ? (
           <div className="space-y-2.5">
             {rawInsights.map((insight, idx) => {
-              const { category, Icon, badgeClass, iconClass, borderClass } = classifyInsight(
+              const { category, Icon, iconClass, borderClass } = classifyInsight(
                 insight,
                 hazardType
               )
@@ -216,9 +199,9 @@ export default function InsightsPanel({
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className={`text-[10px] py-0 px-1.5 font-medium ${badgeClass}`}>
+                      <span className={`text-[11px] font-semibold tracking-wide uppercase ${iconClass}`}>
                         {category}
-                      </Badge>
+                      </span>
                     </div>
                     <p className="text-xs leading-relaxed text-foreground/90 font-normal">
                       {insight}

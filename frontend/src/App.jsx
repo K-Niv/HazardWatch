@@ -7,17 +7,14 @@ import {
   Calendar,
   Thermometer,
   ShieldCheck,
-  Database,
   ExternalLink,
   TrendingUp,
-  AlertTriangle,
   Loader2,
   Clock,
 } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import CitySearch from '@/components/CitySearch'
@@ -27,6 +24,8 @@ import FrequencyChart from '@/components/FrequencyChart'
 import IntensityChart from '@/components/IntensityChart'
 import InsightsPanel from '@/components/InsightsPanel'
 import AISummary from '@/components/AISummary'
+import ErrorMessage from '@/components/ErrorMessage'
+import { KPICardsSkeleton } from '@/components/LoadingSkeleton'
 import { useAnalysis } from '@/hooks/useAnalysis'
 import './App.css'
 
@@ -149,9 +148,6 @@ export default function App() {
                   <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground bg-clip-text text-transparent">
                     HazardWatch
                   </h1>
-                  <Badge variant="outline" className="text-xs font-mono py-0.5 border-primary/30 text-primary">
-                    v0.1.0
-                  </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground hidden sm:block">
                   Climate Hazard Trend Analyzer & Empirical Extremes Observatory
@@ -159,32 +155,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Status & Quick Links */}
+            {/* Quick Links */}
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/80 bg-muted/40 text-xs">
-                <Activity className="w-3.5 h-3.5 text-primary" />
-                <span className="text-muted-foreground">Engine:</span>
-                <span className="font-medium text-foreground">ERA5 Reanalysis</span>
-              </div>
-
-              {data?.cached ? (
-                <Badge
-                  variant="secondary"
-                  className="hidden lg:inline-flex items-center gap-1.5 py-1 px-2.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30"
-                >
-                  <Database className="w-3 h-3 text-emerald-400" />
-                  <span>⚡ Cached via MongoDB</span>
-                </Badge>
-              ) : (
-                <Badge
-                  variant="secondary"
-                  className="hidden lg:inline-flex items-center gap-1.5 py-1 px-2.5 text-xs text-muted-foreground"
-                >
-                  <Database className="w-3 h-3 text-cyan-400" />
-                  <span>Open-Meteo ERA5 / Atlas Cache</span>
-                </Badge>
-              )}
-
               <a
                 href="https://github.com/K-Niv/HazardWatch"
                 target="_blank"
@@ -201,23 +173,11 @@ export default function App() {
 
         {/* Main Application Container */}
         <main className="container mx-auto px-4 lg:px-8 py-6 flex-1 flex flex-col gap-6">
-          {/* Global Error Banner */}
-          {error && (
-            <div className="p-4 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-300 text-xs flex items-center justify-between gap-3 shadow-md animate-in fade-in">
-              <div className="flex items-center gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                <span>{error}</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAnalyzeClick}
-                className="h-7 text-xs border-rose-500/30 hover:bg-rose-500/20 text-rose-200"
-              >
-                Retry
-              </Button>
-            </div>
-          )}
+          {/* Global Error Banner (2.10) */}
+          <ErrorMessage
+            error={error}
+            onRetry={handleAnalyzeClick}
+          />
 
           {/* Top Control Bar / Quick Switcher */}
           <section className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm">
@@ -261,14 +221,6 @@ export default function App() {
                 <Calendar className="w-3.5 h-3.5 text-primary" />
                 <span className="font-mono font-medium text-foreground">{yearRange.start} – {yearRange.end}</span>
               </div>
-              {hasPendingChanges && (
-                <>
-                  <div className="h-4 w-px bg-border hidden sm:block" />
-                  <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/40 bg-amber-500/10 font-mono py-0">
-                    Staged • Click Analyze
-                  </Badge>
-                </>
-              )}
             </div>
           </section>
 
@@ -284,9 +236,6 @@ export default function App() {
                       <MapPin className="w-4 h-4 text-primary" />
                       Target Location
                     </span>
-                    <Badge variant="secondary" className="text-[10px] font-mono">
-                      Geocoding
-                    </Badge>
                   </CardTitle>
                   <CardDescription className="text-xs">
                     Search any global city or select a historical hotspot.
@@ -368,9 +317,6 @@ export default function App() {
                       <MapPin className="w-4 h-4 text-primary" />
                       Geographic Pin
                     </span>
-                    <Badge variant="outline" className="text-[10px]">
-                      OpenStreetMap
-                    </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -387,96 +333,100 @@ export default function App() {
 
             {/* Main Content Dashboard (8 Cols on desktop) */}
             <div className="lg:col-span-8 flex flex-col gap-6">
-              {/* Metric Summary Cards Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="p-4 pb-2">
-                    <CardDescription className="text-xs font-medium flex items-center justify-between">
-                      <span>Total Events</span>
-                      <Activity className="w-3.5 h-3.5 text-primary" />
-                    </CardDescription>
-                    <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
-                      {loading ? (
-                        <span className="inline-block w-8 h-6 bg-muted/60 animate-pulse rounded" />
-                      ) : (
-                        activeHazardData?.total_events ?? '—'
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-[11px] text-muted-foreground">
-                      Across {yearRange.end - yearRange.start + 1} observation years
-                    </p>
-                  </CardContent>
-                </Card>
+              {/* Metric Summary Cards Grid (2.1 & 2.10) */}
+              {loading && !activeHazardData ? (
+                <KPICardsSkeleton />
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+                    <CardHeader className="p-4 pb-2">
+                      <CardDescription className="text-xs font-medium flex items-center justify-between">
+                        <span>Total Events</span>
+                        <Activity className="w-3.5 h-3.5 text-primary" />
+                      </CardDescription>
+                      <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
+                        {loading ? (
+                          <span className="inline-block w-8 h-6 bg-muted/60 animate-pulse rounded" />
+                        ) : (
+                          activeHazardData?.total_events ?? '—'
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <p className="text-[11px] text-muted-foreground">
+                        Across {yearRange.end - yearRange.start + 1} observation years
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="p-4 pb-2">
-                    <CardDescription className="text-xs font-medium flex items-center justify-between">
-                      <span>{isHeatwave ? 'T95 Threshold' : 'R95p Threshold'}</span>
-                      <Thermometer className="w-3.5 h-3.5 text-orange-400" />
-                    </CardDescription>
-                    <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
-                      {loading ? (
-                        <span className="inline-block w-14 h-6 bg-muted/60 animate-pulse rounded" />
-                      ) : activeHazardData?.threshold != null ? (
-                        isHeatwave ? `${activeHazardData.threshold}°C` : `${activeHazardData.threshold} mm`
-                      ) : (
-                        '—'
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-[11px] text-muted-foreground">
-                      Regional 95th percentile baseline
-                    </p>
-                  </CardContent>
-                </Card>
+                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+                    <CardHeader className="p-4 pb-2">
+                      <CardDescription className="text-xs font-medium flex items-center justify-between">
+                        <span>{isHeatwave ? 'T95 Threshold' : 'R95p Threshold'}</span>
+                        <Thermometer className="w-3.5 h-3.5 text-orange-400" />
+                      </CardDescription>
+                      <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
+                        {loading ? (
+                          <span className="inline-block w-14 h-6 bg-muted/60 animate-pulse rounded" />
+                        ) : activeHazardData?.threshold != null ? (
+                          isHeatwave ? `${activeHazardData.threshold}°C` : `${activeHazardData.threshold} mm`
+                        ) : (
+                          '—'
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <p className="text-[11px] text-muted-foreground">
+                        Regional 95th percentile baseline
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="p-4 pb-2">
-                    <CardDescription className="text-xs font-medium flex items-center justify-between">
-                      <span>Peak Activity</span>
-                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                    </CardDescription>
-                    <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
-                      {loading ? (
-                        <span className="inline-block w-12 h-6 bg-muted/60 animate-pulse rounded" />
-                      ) : (
-                        peakYearInfo.year
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-[11px] text-muted-foreground">
-                      {peakYearInfo.count > 0
-                        ? `Record ${peakYearInfo.count} event${peakYearInfo.count > 1 ? 's' : ''} in season`
-                        : 'No events detected'}
-                    </p>
-                  </CardContent>
-                </Card>
+                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+                    <CardHeader className="p-4 pb-2">
+                      <CardDescription className="text-xs font-medium flex items-center justify-between">
+                        <span>Peak Activity</span>
+                        <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                      </CardDescription>
+                      <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1">
+                        {loading ? (
+                          <span className="inline-block w-12 h-6 bg-muted/60 animate-pulse rounded" />
+                        ) : (
+                          peakYearInfo.year
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <p className="text-[11px] text-muted-foreground">
+                        {peakYearInfo.count > 0
+                          ? `Record ${peakYearInfo.count} event${peakYearInfo.count > 1 ? 's' : ''} in season`
+                          : 'No events detected'}
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
-                  <CardHeader className="p-4 pb-2">
-                    <CardDescription className="text-xs font-medium flex items-center justify-between">
-                      <span>Data Quality</span>
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    </CardDescription>
-                    <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1 text-emerald-400">
-                      {loading ? (
-                        <span className="inline-block w-10 h-6 bg-muted/60 animate-pulse rounded" />
-                      ) : (
-                        `${data?.data_quality?.completeness_pct ?? 100}%`
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <p className="text-[11px] text-muted-foreground">
-                      Continuous daily series verified
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+                  <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
+                    <CardHeader className="p-4 pb-2">
+                      <CardDescription className="text-xs font-medium flex items-center justify-between">
+                        <span>Data Quality</span>
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      </CardDescription>
+                      <CardTitle className="text-2xl font-bold font-mono tracking-tight mt-1 text-emerald-400">
+                        {loading ? (
+                          <span className="inline-block w-10 h-6 bg-muted/60 animate-pulse rounded" />
+                        ) : (
+                          `${data?.data_quality?.completeness_pct ?? 100}%`
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <p className="text-[11px] text-muted-foreground">
+                        Continuous daily series verified
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               {/* Primary Visualization Deck Slot (2.6 & 2.7) */}
               <Card className="border-border/60 bg-card/80 backdrop-blur-sm">
@@ -514,9 +464,6 @@ export default function App() {
                         </TabsTrigger>
                       </TabsList>
                     </Tabs>
-                    <Badge variant="outline" className="text-xs font-mono hidden sm:inline-flex">
-                      Chart.js
-                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-2">
@@ -568,7 +515,6 @@ export default function App() {
             <div className="flex flex-wrap items-center gap-4 text-[11px]">
               <span>Data: <a href="https://open-meteo.com" target="_blank" rel="noreferrer" className="underline hover:text-foreground">Open-Meteo Historical API</a></span>
               <span>Methodology: <span className="text-foreground">WMO R95p / P95 Climatology</span></span>
-              <span>Cache: <span className="text-foreground">MongoDB Atlas</span></span>
             </div>
           </div>
         </footer>

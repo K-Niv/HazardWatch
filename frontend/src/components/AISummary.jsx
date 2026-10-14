@@ -6,54 +6,15 @@ import {
   Check,
   RefreshCw,
   AlertCircle,
-  Bot,
-  Cpu,
   AlertTriangle,
   Zap,
   Droplets,
   HeartPulse,
   CheckCircle2,
-  ShieldAlert,
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { fetchAISummary } from '@/services/api'
-
-/**
- * Returns dynamic styling tokens based on assessed risk level tier.
- *
- * @param {string} level - 'Critical' | 'High' | 'Elevated' | 'Moderate'
- */
-function getRiskBadge(level = 'Elevated') {
-  const norm = String(level).toLowerCase()
-  if (norm.includes('crit')) {
-    return {
-      label: 'Critical Risk',
-      classes: 'border-rose-500/40 text-rose-300 bg-rose-500/15',
-      icon: ShieldAlert,
-    }
-  }
-  if (norm.includes('high')) {
-    return {
-      label: 'High Risk',
-      classes: 'border-orange-500/40 text-orange-300 bg-orange-500/15',
-      icon: AlertTriangle,
-    }
-  }
-  if (norm.includes('mod')) {
-    return {
-      label: 'Moderate Risk',
-      classes: 'border-blue-500/40 text-blue-300 bg-blue-500/15',
-      icon: CheckCircle2,
-    }
-  }
-  return {
-    label: 'Elevated Risk',
-    classes: 'border-amber-500/40 text-amber-300 bg-amber-500/15',
-    icon: AlertTriangle,
-  }
-}
 
 /**
  * Maps impact strings to appropriate contextual lucide icons.
@@ -99,10 +60,6 @@ export default function AISummary({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
-  const [lastGeneratedKey, setLastGeneratedKey] = useState('')
-
-  const currentParamKey = `${hazardType}-${selectedCity?.name}-${yearRange?.start}-${yearRange?.end}`
-  const isStale = Boolean(summaryData && lastGeneratedKey && lastGeneratedKey !== currentParamKey)
 
   const handleGenerate = async () => {
     if (!data || analysisLoading) return
@@ -133,7 +90,6 @@ export default function AISummary({
     try {
       const response = await fetchAISummary(payload)
       setSummaryData(response)
-      setLastGeneratedKey(currentParamKey)
     } catch (err) {
       setError(err?.message || 'Failed to generate climate intelligence briefing.')
     } finally {
@@ -170,8 +126,6 @@ export default function AISummary({
   }
 
   const hasData = Boolean(data && (data.events || data.yearly_counts))
-  const riskInfo = getRiskBadge(summaryData?.risk_level)
-  const RiskIcon = riskInfo.icon
 
   return (
     <Card className={`border-border/60 bg-card/80 backdrop-blur-sm relative overflow-hidden flex flex-col ${className}`}>
@@ -188,19 +142,6 @@ export default function AISummary({
             <CardDescription className="text-xs mt-1">
               Multi-pillar risk synthesis, sectoral impacts, and municipal adaptation strategy.
             </CardDescription>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            {summaryData?.risk_level && (
-              <Badge variant="outline" className={`text-[10px] font-mono flex items-center gap-1 py-0 px-2 ${riskInfo.classes}`}>
-                <RiskIcon className="w-3 h-3" />
-                <span>{summaryData.risk_level}</span>
-              </Badge>
-            )}
-
-            <Badge variant="outline" className="text-[10px] font-mono border-purple-500/40 text-purple-300 bg-purple-500/10">
-              Groq Cloud AI
-            </Badge>
           </div>
         </div>
       </CardHeader>
@@ -245,28 +186,6 @@ export default function AISummary({
           <div className="space-y-3.5 flex-1 flex flex-col justify-between">
             {/* Executive Synopsis Box */}
             <div className="p-3.5 rounded-xl border border-purple-500/30 bg-purple-500/[0.03] space-y-2 relative">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  {summaryData.is_ai_generated ? (
-                    <Badge variant="outline" className="text-[10px] font-mono border-purple-500/40 text-purple-300 bg-purple-500/15 py-0">
-                      <Bot className="w-3 h-3 mr-1 text-purple-400" />
-                      {summaryData.source || 'Groq Cloud Llama 3.3'}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-[10px] font-mono border-cyan-500/40 text-cyan-300 bg-cyan-500/10 py-0">
-                      <Cpu className="w-3 h-3 mr-1 text-cyan-400" />
-                      {summaryData.source || 'Deterministic Intelligence Engine'}
-                    </Badge>
-                  )}
-                </div>
-
-                {isStale && (
-                  <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-300 bg-amber-500/10 font-mono py-0">
-                    Stale Params • Refresh
-                  </Badge>
-                )}
-              </div>
-
               <p className="text-xs sm:text-[13px] leading-relaxed text-foreground/95 font-normal">
                 {summaryData.summary}
               </p>
@@ -357,12 +276,12 @@ export default function AISummary({
           <div className="space-y-4 flex-1 flex flex-col justify-between">
             <div className="p-3.5 rounded-xl border border-border/40 bg-muted/15 space-y-2.5">
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Synthesize multi-decadal frequency trajectories, extreme severity runs, and municipal vulnerability assessments using high-speed LLM inference (Groq Cloud LPU).
+                Synthesize multi-decadal frequency trajectories, extreme severity runs, and municipal vulnerability assessments into an actionable briefing.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px] text-muted-foreground/80">
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block" />
-                  Executive risk tiering
+                  Multi-pillar risk synthesis
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block" />
@@ -374,7 +293,7 @@ export default function AISummary({
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block" />
-                  Deterministic engine fallback
+                  Climatological evaluation
                 </span>
               </div>
             </div>

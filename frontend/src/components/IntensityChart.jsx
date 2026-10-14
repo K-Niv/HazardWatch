@@ -12,8 +12,7 @@ import {
   Filler,
 } from 'chart.js'
 import { Chart } from 'react-chartjs-2'
-import { CloudRain, Clock, Flame, ShieldAlert, Award } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { CloudRain, Flame, ShieldAlert } from 'lucide-react'
 
 // Ensure Chart.js primitives are registered
 ChartJS.register(
@@ -421,24 +420,22 @@ export default function IntensityChart({
           </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-mono">
           {maxIntensityEvent && (
-            <Badge variant="outline" className="text-[11px] font-mono border-orange-500/30 text-orange-300 bg-orange-500/10">
-              <Award className="w-3 h-3 mr-1 text-orange-400" />
+            <span className="text-orange-400 font-medium">
               Peak: {isHeatwave ? `${maxIntensityEvent.peak_temp}°C` : `${maxIntensityEvent.peak_daily_mm} mm/d`}
-            </Badge>
+            </span>
           )}
 
           {maxDurationEvent && (
-            <Badge variant="outline" className="text-[11px] font-mono border-amber-500/30 text-amber-300 bg-amber-500/10">
-              <Clock className="w-3 h-3 mr-1 text-amber-400" />
+            <span className="text-amber-400 font-medium">
               Longest: {maxDurationEvent.duration}d
-            </Badge>
+            </span>
           )}
 
-          <Badge variant="outline" className="text-[11px] font-mono border-border/60 text-muted-foreground">
-            Avg Duration: {avgDuration}d
-          </Badge>
+          <span>
+            Avg Duration: <strong className="text-foreground">{avgDuration}d</strong>
+          </span>
         </div>
       </div>
 

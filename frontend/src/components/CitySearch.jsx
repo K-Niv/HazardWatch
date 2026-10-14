@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Search, MapPin, Loader2, X, Globe, Navigation } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import './CitySearch.css'
 
 const PRESET_CITIES = [
@@ -231,9 +230,9 @@ export default function CitySearch({ selectedCity, onSelect }) {
                     </div>
 
                     {city.countryCode && (
-                      <Badge variant="outline" className="text-[10px] font-mono shrink-0 uppercase px-1.5 py-0 border-border/80">
+                      <span className="text-[10px] font-mono text-muted-foreground uppercase px-1.5 py-0.5 rounded border border-border/80 shrink-0">
                         {city.countryCode}
-                      </Badge>
+                      </span>
                     )}
                   </li>
                 )
@@ -265,9 +264,6 @@ export default function CitySearch({ selectedCity, onSelect }) {
               </p>
             </div>
           </div>
-          <Badge variant="secondary" className="text-[10px] font-mono shrink-0">
-            Active
-          </Badge>
         </div>
       )}
 

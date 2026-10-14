@@ -12,8 +12,7 @@ import {
   Filler,
 } from 'chart.js'
 import { Chart } from 'react-chartjs-2'
-import { Flame, CloudRain, TrendingUp, Calendar, Zap } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Flame, CloudRain, Calendar } from 'lucide-react'
 
 // Register Chart.js primitives once
 ChartJS.register(
@@ -318,22 +317,20 @@ export default function FrequencyChart({
           <span className="text-muted-foreground font-mono">({labels.length} Years)</span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-mono">
           {labels.length < 5 && (
-            <Badge variant="outline" className="text-[10px] font-mono border-muted-foreground/30 text-muted-foreground bg-muted/20">
-              5-Yr Trendline Omitted (Span &lt; 5 yrs)
-            </Badge>
+            <span className="text-[11px] text-muted-foreground/80">
+              5-Yr Trendline Omitted (&lt; 5 yrs)
+            </span>
           )}
           {peakYear && (
-            <Badge variant="outline" className="text-[11px] font-mono border-amber-500/30 text-amber-300 bg-amber-500/10">
-              <Zap className="w-3 h-3 mr-1 text-amber-400" />
+            <span className="text-amber-400 font-medium">
               Peak: {peakYear} ({maxCount} events)
-            </Badge>
+            </span>
           )}
-          <Badge variant="outline" className="text-[11px] font-mono border-border/60 text-muted-foreground">
-            <TrendingUp className="w-3 h-3 mr-1 text-primary" />
-            Avg: {averagePerYear} / yr
-          </Badge>
+          <span>
+            Avg: <strong className="text-foreground">{averagePerYear}</strong> / yr
+          </span>
         </div>
       </div>
 

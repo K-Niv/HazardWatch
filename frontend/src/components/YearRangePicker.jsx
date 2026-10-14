@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { ChevronRight, Clock, AlertCircle } from 'lucide-react'
 import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import './YearRangePicker.css'
 
 const MIN_ALLOWED_YEAR = 1950
@@ -181,11 +180,6 @@ export default function YearRangePicker({
               >
                 <div className="flex items-center justify-between">
                   <span className="font-mono font-bold">{preset.label}</span>
-                  {isSelected && (
-                    <Badge variant="secondary" className="text-[9px] px-1 py-0 uppercase">
-                      Active
-                    </Badge>
-                  )}
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{preset.tag}</p>
               </button>
